@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 // --- Images ---
 // Yeh Udemy ki original, high-quality images hain
-const heroBgImageUrl = 'https://s.udemycdn.com/teaching/billboard-desktop-2x-v4.jpg';
-const tabImagePlan = 'https://s.udemycdn.com/teaching/plan-your-curriculum-2x-v3.jpg';
-const tabImageRecord = 'https://s.udemycdn.com/teaching/record-your-video-2x-v3.jpg';
-const tabImageLaunch = 'https://s.udemycdn.com/teaching/launch-your-course-2x-v3.jpg';
+const heroBgImageUrl = 'src/assets/hk1.webp';
+const tabImagePlan = 'src/assets/hk2.webp';
+const tabImageRecord = 'src/assets/hk3.webp';
+const tabImageLaunch = 'src/assets/hk4.webp';
 
 // Aap ke 'reasons' section ke icons (filhaal commented hain)
 // const reasonIcon1 = '/images/icon-teach.svg';

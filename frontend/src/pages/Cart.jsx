@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 // --- IMAGE URL FIX ---
 // Aap ka diya gaya naya URL
-const emptyCartImage = "https://s.udemycdn.com/browse_components/flyout/empty-shopping-cart-v2-2x.jpg";
+const emptyCartImage = "src/assets/hk5.webp";
 
 // --- NAYA LOADER COMPONENT ---
 // Yeh ek simple circle loader hai jo page ke beech mein dikhega
