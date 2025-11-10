@@ -14,3 +14,13 @@
   width: max-content;
 }
 
+#flip-container {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+#flip-container.flip {
+  transform: rotateY(180deg);
+}
+
+

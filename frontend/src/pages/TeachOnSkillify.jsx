@@ -47,7 +47,7 @@ const TeachOnSkillify = () => {
               Become an instructor and change lives — including your own
             </p>
             {/* Button ab yahan saaf nazar aayega */}
-            <Link to="/login" className={ctaButtonClasses}>
+            <Link to="/teacher-signup" className={ctaButtonClasses}>
               Get started
             </Link>
           </div>
@@ -207,7 +207,7 @@ const TeachOnSkillify = () => {
           Join one of the world's largest online learning marketplaces.
         </p>
         {/* Yahan bhi fixed button istemal ho raha hai */}
-        <Link to="/login" className={ctaButtonClasses}>
+        <Link to="/teacher-signup" className={ctaButtonClasses}>
           Get started
         </Link>
       </section>

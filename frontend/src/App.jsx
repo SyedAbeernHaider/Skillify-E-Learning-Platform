@@ -11,6 +11,8 @@ import Footer from "./components/Footer";
 import Pricing from "./pages/Pricing";
 import TeachOnSkillify from "./pages/TeachOnSkillify";
 import Cart from "./pages/Cart";
+import TeacherSignUp from "./pages/Teacherpanel/TeacherSignUp";
+import CoursesPage from "./pages/CoursesPage";
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/teachonskillify" element={<TeachOnSkillify />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/teacher-signup" element={<TeacherSignUp />} />
+        <Route path="/courses" element={<CoursesPage />} />
       </Routes>
       <Footer />
     </Router>

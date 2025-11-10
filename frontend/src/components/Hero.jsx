@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
     return (
@@ -16,12 +17,12 @@ const Hero = () => {
                             Learning with Skillify pays off. Get started with courses from just $9.99 and build the future you want.
                         </p>
 
-                        <a
-                            href="#"
+                        <Link
+                            to="/login"
                             className="inline-block bg-purple-600 text-white font-bold py-3 px-8 rounded-md hover:bg-purple-700 transition-transform transform hover:scale-105"
                         >
                             Start Learning Today
-                        </a>
+                        </Link>
 
                     </div>
                 </div>
