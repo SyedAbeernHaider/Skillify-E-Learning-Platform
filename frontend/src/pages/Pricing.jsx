@@ -7,7 +7,7 @@ const plans = [
     title: "Personal Plan",
     subtitle: "For you",
     iconText: "Individual",
-    price: "$11.00 per month",
+    price: "Rs 5000 per month",
     buttonText: "Try it free",
     type: "personal",
     features: [
@@ -22,7 +22,7 @@ const plans = [
     title: "Team Plan",
     subtitle: "For your team",
     iconText: "2 to 50 people",
-    price: "$30.00 a month per user",
+    price: "RS 10,000 a month per user",
     buttonText: "Try it free",
     type: "team",
     features: [
