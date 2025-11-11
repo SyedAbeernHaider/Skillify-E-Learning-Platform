@@ -1,5 +1,16 @@
 import React from "react";
 
+// --- FIX: Images ko import kiya hai taake woh React mein load ho sakein ---
+// (Main farz kar raha hoon ke yeh file 'src/components/' mein hai)
+import WebDevImage from "../assets/web development.jpg";
+import AwsImage from "../assets/AWSS.png";
+import AiImage from "../assets/AI.jpg";
+import DigitalMarketingImage from "../assets/Digital.jpg";
+import PythonImage from "../assets/python.jpg";
+import CyberImage from "../assets/cyber.jpg";
+// --- END FIX ---
+
+
 const COURSES = [
   {
     id: 1,
@@ -7,8 +18,8 @@ const COURSES = [
     instructor: "Dr. Hasan Kamran",
     rating: 4.8,
     reviews: 12456,
-    price: "$12.99",
-    image: "src/assets/web development.jpg"
+    price: "PKR 3,500", // <-- Changed
+    image: WebDevImage      // <-- Changed
   },
   {
     id: 2,
@@ -16,8 +27,8 @@ const COURSES = [
     instructor: "Eng. Haziq Zia",
     rating: 4.6,
     reviews: 9873,
-    price: "$9.99",
-    image: "src/assets/AWSS.png"
+    price: "PKR 2,500", // <-- Changed
+    image: AwsImage         // <-- Changed
   },
   {
     id: 3,
@@ -25,8 +36,8 @@ const COURSES = [
     instructor: "PHD. Abdul Ali Naqvi",
     rating: 4.7,
     reviews: 14582,
-    price: "$11.99",
-    image: "src/assets/AI.jpg"
+    price: "PKR 3,200", // <-- Changed
+    image: AiImage          // <-- Changed
   },
   {
     id: 4,
@@ -34,8 +45,8 @@ const COURSES = [
     instructor: "MSC. Abeer Haider",
     rating: 4.5,
     reviews: 8642,
-    price: "$8.99",
-    image: "src/assets/Digital.jpg"
+    price: "PKR 1,800", // <-- Changed
+    image: DigitalMarketingImage // <-- Changed
   },
   {
     id: 5,
@@ -43,8 +54,8 @@ const COURSES = [
     instructor: "Dr. Syed Ahmed",
     rating: 4.9,
     reviews: 21876,
-    price: "$13.99",
-    image: "src/assets/python.jpg"
+    price: "PKR 4,000", // <-- Changed
+    image: PythonImage      // <-- Changed
   },
   {
     id: 6,
@@ -52,8 +63,8 @@ const COURSES = [
     instructor: "BSC. King Faiz",
     rating: 4.7,
     reviews: 14220,
-    price: "$10.49",
-    image: "src/assets/cyber.jpg"
+    price: "PKR 2,800", // <-- Changed
+    image: CyberImage       // <-- Changed
   }
 ];
 
