@@ -1,0 +1,123 @@
+Skillify E-Learning Platform - Complete A to Z Project Documentation
+==================================================================
+
+1. PROJECT OVERVIEW
+-------------------
+Skillify is a comprehensive E-Learning platform built using the MERN stack (MongoDB, Express.js, React.js, Node.js). It facilitates three distinct user roles: Students, Instructors, and Administrators, each with dedicated dashboards and workflows. The platform handles course creation, content delivery (video/text), student progress tracking, quizzing, assignments, certificates, and revenue management.
+
+2. TECHNOLOGY STACK
+-------------------
+- **Frontend:** React.js (Vite), Redux Toolkit (State Management), React Router DOM (Routing), Tailwind CSS (Styling), Framer Motion (Animations).
+- **Backend:** Node.js, Express.js.
+- **Database:** MongoDB (Mongoose OD).
+- **Authentication:** JWT (JSON Web Tokens) with secure cookie/storage handling.
+- **Other Tools:** Multer (File Uploads), Socket.io (Real-time functionality, if leveraged for chat).
+
+3. FOLDER STRUCTURE & EXPLANATION
+---------------------------------
+
+### Root Directory
+- `/backend`: Contains all server-side logic, API endpoints, and database connection scripts.
+- `/frontend`: Contains the client-side React application.
+
+### Backend Structure (`/backend`)
+- **`config/`**: Configuration files (e.g., database connection `db.js`).
+- **`controllers/`**: Contains the core business logic.
+  - `authController.js`: Handles logic for Login, Signup, OTP verification.
+  - `instructorController.js`: Manages course creation, section/lesson addition, dashboard stats.
+  - `studentController.js`: Handles course enrollment, progress tracking, taking quizzes, and certificate generation.
+  - `adminController.js`: Logic for approving instructors/courses and viewing platform-wide analytics.
+- **`middleware/`**: Custom middleware functions.
+  - `authMiddleware.js`: Protects routes by verifying JWT tokens and user roles.
+  - `errorMiddleware.js`: Standardized error handling.
+- **`models/`**: Mongoose schemas defining the database structure.
+  - `User.js`: Unified user model with roles (student, instructor, admin).
+  - `Course.js`: Complex schema housing course metadata, sections, lessons, and quizzes.
+  - `Enrollment.js`: Tracks a student's progress through a specific course.
+  - `Revenue.js`: Tracks financial transactions and platform fees.
+- **`routes/`**: API route definitions mapping URLs to controller functions.
+- **`app.js`**: The Express application entry point, middleware setup, and route mounting.
+
+### Frontend Structure (`/frontend/src`)
+- **`components/`**: Reusable UI components (Navbar, Sidebar, Footer, Cards).
+  - `DashboardLayout.jsx`: The shell for authenticated pages, handling the sidebar logic.
+- **`pages/`**: View components representing full pages.
+  - **`Student/`**: `StudentDashboard`, `EnrolledCourses`, `CoursePlayer` (the learning interface).
+  - **`Instructor/`**: `InstructorDashboard`, `CreateCourse`, `ManageLectures` (course building).
+  - **`Admin/`**: `AdminDashboard`, `InstructorApprovals`, `AdminCourses`.
+- **`redux/`**: Global state management.
+  - `authSlice.js`: Manages user login state and user data.
+- **`App.jsx`**: The main routing file defining which pages are shown for which URLs and roles.
+
+4. COMPLETE A-Z APPLICATION FLOW
+--------------------------------
+
+### A. Authentication & User Management
+1. **Registration:**
+   - Users sign up as either a 'Student' or 'Instructor'.
+   - **Student:** Immediate access to the student dashboard.
+   - **Instructor:** Account is created but restricted. Must complete a profile (qualifications, bio) and submit for Admin approval.
+2. **Login:**
+   - Validates credentials against `User` collection.
+   - Generates a JWT token sent to the client.
+   - Redux state updates with user info, updating the UI to show the correct dashboard.
+
+### B. Instructor Workflow (Content Creation)
+1. **Dashboard:** View analytics (revenue, total students, course ratings).
+2. **Create Course:**
+   - Instructor enters metadata: Title, Description, Price, Category, Level, Thumbnail.
+   - Initial status: `pending` (requires Admin approval to be public).
+   - **Course Structure:** Instructor adds **Sections** (Modules) and **Lessons** (Video/Text) within those sections.
+   - **Quizzes:** Can be added to specific sections or lessons.
+   - **Publishing:** Once ready, the instructor "publishes" the course. If it's the first time, it may trigger an admin review request (depending on config).
+3. **Management:**
+   - Monitor student progress and quiz results via `InstructorCourseAnalytics`.
+   - Award manual badges to students.
+
+### C. Student Workflow (Learning Journey)
+1. **Discovery:**
+   - Browse courses on the public `CoursesPage`.
+   - Filter by category, level, or price.
+   - View `CourseDetailPage` for curriculum preview and instructor info.
+2. **Enrollment:**
+   - Clicking "Enroll" creates an `Enrollment` document in the database linking `User` and `Course`.
+   - If paid, a `Revenue` record is generated (split between Instructor and Platform).
+3. **Learning (Course Player):**
+   - Access via "My Courses" -> "Start Course".
+   - **Video Player:** Watch content.
+   - **Progress Tracking:**
+     - **Lesson Completion:** Automatically verified when the associated quiz is passed.
+     - **Quizzes:** Users take distinct quizzes per section/lesson. Scores are recorded in `Enrollment.progress`.
+4. **Completion:**
+   - Once all requirements (Videos/Quizzes) are met, the course is marked `isCompleted`.
+   - **Certificate:** Generated dynamically with the student's name, course title, and date. Downloadable as PDF.
+   - **Badges:** Earned for specific achievements (e.g., passing a quiz with 100%).
+
+### D. Admin Workflow (Platform Control)
+1. **Dashboard:** High-level overview of total users, revenue, and active courses.
+2. **Approvals:**
+   - **Instructors:** Review profiles and approve applications. This flips the user's `instructorStatus` to approved.
+   - **Courses:** Review new courses for quality control before they appear in the public catalog.
+3. **Revenue:** Monitor platform fees vs. instructor payouts.
+
+5. KEY FUNCTIONS & LOGIC
+----------------------
+
+### Backend Logic
+- **`createCourse` (Instructor):** Initializes a new course document.
+- **`addLesson` (Instructor):** Uses MongoDB's `$push` to add a sub-document to the `sections.lessons` array. Recalculates total duration.
+- **`enrollCourse` (Student):** Checks if already enrolled. If not, creates `Enrollment` doc.
+- **`updateProgress` (Student):**
+  - Crucial logic checks if a Quiz is passed.
+  - If Quiz Passed -> Marks all lessons in that section as completed.
+  - Updates `completionPercentage`.
+  - If 100%, sets `isCompleted = true`.
+
+### Frontend Logic
+- **`ProtectedRoute`:** A wrapper component that checks the Redux `auth` state. If a student tries to access an instructor route, they are redirected.
+- **`CoursePlayer`:** The complex UI handling video playback, sidebar navigation of lessons, and handling quiz submissions.
+- **`Redux Store`:** Centralized source of truth for the currently logged-in user, preventing the need to pass props down deeply.
+
+6. SUMMARY
+----------
+This project is a fully functional LMS (Learning Management System). It separates concerns effectively between the three roles. The backend uses a relational-style data model (via Mongoose references) to link Students to Courses via Enrollments. The frontend is a responsive, single-page application (SPA) that provides a seamless user experience from registration to certification.

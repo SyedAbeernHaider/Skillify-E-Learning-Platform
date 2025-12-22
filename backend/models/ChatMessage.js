@@ -1,0 +1,34 @@
+const mongoose = require('mongoose');
+
+const chatMessageSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    },
+    message: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    userRole: {
+        type: String,
+        enum: ['student', 'instructor'],
+        required: true,
+    },
+    userName: {
+        type: String,
+        required: true,
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now,
+    },
+}, {
+    timestamps: true,
+});
+
+// Index for faster queries
+chatMessageSchema.index({ timestamp: -1 });
+
+module.exports = mongoose.model('ChatMessage', chatMessageSchema);
