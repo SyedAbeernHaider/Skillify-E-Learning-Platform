@@ -14,6 +14,7 @@ function TakeQuiz() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [results, setResults] = useState(null);
+    const [isLastQuiz, setIsLastQuiz] = useState(false);
 
     useEffect(() => {
         fetchQuiz();
@@ -61,6 +62,7 @@ function TakeQuiz() {
             });
 
             setResults(response);
+            setIsLastQuiz(response.isLastQuiz || false); // Store whether this is the last quiz
             toast.success('Quiz submitted successfully!');
 
             // Check for certificate? Backend handles it.
@@ -187,15 +189,53 @@ function TakeQuiz() {
                                 >
                                     Back to Course
                                 </button>
-                                {!results.passed && (
+                                {/* Only show retry button if student failed AND it's the last quiz */}
+                                {!results.passed && isLastQuiz && (
                                     <button
                                         onClick={() => window.location.reload()}
-                                        className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-semibold"
+                                        className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition font-semibold"
                                     >
-                                        Retry Quiz
+                                        Try Again
                                     </button>
                                 )}
                             </div>
+
+                            {/* Informative message for failed non-last quizzes */}
+                            {!results.passed && !isLastQuiz && (
+                                <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg">
+                                    <p className="text-yellow-800 font-medium">
+                                        ⚠️ You didn't pass this quiz, but you can continue with the course.
+                                        However, you'll need to pass all quizzes to earn your certificate.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Message for passed quiz */}
+                            {results.passed && !isLastQuiz && (
+                                <div className="mt-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                                    <p className="text-green-800 font-medium">
+                                        ✅ Great job! Continue to the next section to complete the course.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Message for last quiz passed */}
+                            {results.passed && isLastQuiz && (
+                                <div className="mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                                    <p className="text-blue-800 font-medium">
+                                        🎓 Congratulations! You've completed all quizzes. Check the Certificate section in the course player to request your certificate.
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Message for last quiz failed */}
+                            {!results.passed && isLastQuiz && (
+                                <div className="mt-6 p-4 bg-orange-50 border-l-4 border-orange-500 rounded-lg">
+                                    <p className="text-orange-800 font-medium">
+                                        📚 This is the final quiz. You can retry as many times as needed to pass and earn your certificate.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 </div>

@@ -1,0 +1,1789 @@
+================================================================================
+                SKILLIFY E-LEARNING PLATFORM
+           DETAILED PAGE FUNCTIONALITY DOCUMENTATION
+        Frontend & Backend Integration Explained
+================================================================================
+
+TABLE OF CONTENTS
+=================
+1. PUBLIC PAGES
+2. AUTHENTICATION PAGES
+3. STUDENT PANEL PAGES
+4. INSTRUCTOR PANEL PAGES
+5. ADMIN PANEL PAGES
+6. SHARED FEATURES
+
+================================================================================
+SECTION 1: PUBLIC PAGES
+================================================================================
+
+1.1 HOME PAGE (/)
+-----------------
+Route: /
+Component: frontend/src/pages/Home.jsx
+
+FRONTEND FUNCTIONALITY:
+- Displays hero section with platform introduction
+- Shows featured courses carousel
+- Displays statistics (total students, courses, instructors)
+- Shows category cards for course browsing
+- Testimonials section
+- Call-to-action buttons for signup/login
+
+BACKEND INTEGRATION:
+- API: GET /api/student/courses
+- Controller: studentController.getAllCourses()
+- Fetches all published courses for display
+- No authentication required
+- Returns course data: title, thumbnail, price, instructor, rating
+
+DATA FLOW:
+1. Component mounts → useEffect triggers
+2. Calls getAllCourses() from studentService
+3. Backend queries Course model with status: 'published'
+4. Returns course array to frontend
+5. Component renders courses in grid/carousel
+
+
+1.2 COURSES PAGE (/courses)
+---------------------------
+Route: /courses
+Component: frontend/src/pages/CoursesPage.jsx
+
+FRONTEND FUNCTIONALITY:
+- Displays all available courses in grid layout
+- Filter by category, level, price range
+- Search functionality by course title
+- Sort by: newest, price (low-high), rating
+- Pagination for large course lists
+
+BACKEND INTEGRATION:
+- API: GET /api/student/courses
+- Controller: studentController.getAllCourses()
+- Supports query parameters: category, level, minPrice, maxPrice, search
+- Returns filtered and sorted course list
+
+DATA FLOW:
+1. User applies filters → state updates
+2. Frontend builds query string with filters
+3. API call with query parameters
+4. Backend filters Course collection using MongoDB queries
+5. Returns matching courses
+6. Frontend renders filtered results
+
+
+1.3 COURSE DETAIL PAGE (/course/:id)
+------------------------------------
+Route: /course/:id
+Component: frontend/src/pages/CourseDetailPage.jsx
+
+FRONTEND FUNCTIONALITY:
+- Displays complete course information
+- Shows course curriculum (sections and lectures)
+- Instructor profile summary
+- Student reviews and ratings
+- Enrollment button with price
+- Course requirements and learning outcomes
+- Related courses section
+
+BACKEND INTEGRATION:
+- API: GET /api/student/courses/:id
+- Controller: studentController.getCourseDetails()
+- Fetches single course with populated instructor data
+- Returns course structure, content, and metadata
+
+DATA FLOW:
+1. Component extracts courseId from URL params
+2. Calls getCourseDetails(courseId)
+3. Backend finds course by ID and populates instructor reference
+4. Returns complete course object with nested sections/lectures
+5. Frontend displays all course information
+6. Enrollment button triggers enrollment API
+
+
+1.4 PRICING PAGE (/pricing)
+---------------------------
+Route: /pricing
+Component: frontend/src/pages/Pricing.jsx
+
+FRONTEND FUNCTIONALITY:
+- Displays subscription plans (if applicable)
+- Shows pricing tiers: Free, Pro, Enterprise
+- Feature comparison table
+- Payment integration buttons
+
+BACKEND INTEGRATION:
+- Currently static content
+- Future: API for dynamic pricing plans
+- Payment gateway integration for subscriptions
+
+
+1.5 TEACH ON SKILLIFY (/teachonskillify)
+----------------------------------------
+Route: /teachonskillify
+Component: frontend/src/pages/TeachOnSkillify.jsx
+
+FRONTEND FUNCTIONALITY:
+- Landing page for potential instructors
+- Benefits of teaching on platform
+- Success stories
+- Call-to-action to become instructor
+- Redirects to instructor signup
+
+BACKEND INTEGRATION:
+- No direct backend calls
+- Links to /teacher-signup for registration
+
+
+1.6 CART PAGE (/cart)
+--------------------
+Route: /cart
+Component: frontend/src/pages/Cart.jsx
+
+FRONTEND FUNCTIONALITY:
+- Displays courses added to cart (stored in Redux)
+- Shows total price calculation
+- Remove course from cart option
+- Proceed to checkout button
+- Apply coupon code functionality
+
+BACKEND INTEGRATION:
+- Cart stored in Redux (client-side)
+- Checkout triggers enrollment API
+- API: POST /api/student/courses/:id/enroll
+- Controller: studentController.enrollInCourse()
+
+DATA FLOW:
+1. User adds course to cart → Redux action
+2. Cart state updated in Redux store
+3. User proceeds to checkout
+4. For each course in cart, call enrollment API
+5. Backend creates Enrollment record
+6. Creates Revenue record for transaction
+7. Returns success/failure for each enrollment
+
+
+================================================================================
+SECTION 2: AUTHENTICATION PAGES
+================================================================================
+
+2.1 LOGIN PAGE (/login)
+----------------------
+Route: /login
+Component: frontend/src/pages/Login.jsx
+
+FRONTEND FUNCTIONALITY:
+- Email and password input fields
+- Remember me checkbox
+- Forgot password link
+- Social login buttons (Google, Facebook)
+- Form validation
+- Error message display
+- Redirect to appropriate dashboard after login
+
+BACKEND INTEGRATION:
+- API: POST /api/auth/login
+- Controller: authController.login()
+- Validates credentials against User model
+- Returns JWT token and user data
+
+DATA FLOW:
+1. User submits login form
+2. Frontend validates input fields
+3. Calls login API with email and password
+4. Backend finds user by email
+5. Compares password hash using bcrypt
+6. Generates JWT token with user ID and role
+7. Returns token and user object
+8. Frontend stores token in sessionStorage
+9. Stores user data in Redux
+10. Redirects based on role: /student/dashboard, /instructor/dashboard, /admin/dashboard
+
+
+2.2 SIGNUP PAGE (/signup)
+-------------------------
+Route: /signup
+Component: frontend/src/pages/Signup.jsx
+
+FRONTEND FUNCTIONALITY:
+- Registration form: name, email, password, confirm password
+- Role selection: Student or Instructor
+- Terms and conditions checkbox
+- Form validation (email format, password strength)
+- Social signup options
+
+BACKEND INTEGRATION:
+- API: POST /api/auth/register
+- Controller: authController.register()
+- Creates new User document
+- Hashes password before storage
+
+DATA FLOW:
+1. User fills registration form
+2. Frontend validates all fields
+3. Calls register API with user data
+4. Backend checks if email already exists
+5. Hashes password using bcrypt
+6. Creates User document with role
+7. Generates JWT token
+8. Returns token and user data
+9. Frontend stores authentication data
+10. Redirects to appropriate dashboard
+
+
+2.3 ADMIN REGISTER PAGE (/admin-register)
+-----------------------------------------
+Route: /admin-register
+Component: frontend/src/pages/AdminRegister.jsx
+
+FRONTEND FUNCTIONALITY:
+- Special registration form for admin users
+- Requires admin secret key for validation
+- Additional security fields
+- Admin-specific information collection
+
+BACKEND INTEGRATION:
+- API: POST /api/auth/register (with role: 'admin')
+- Validates admin secret key
+- Creates admin user account
+
+DATA FLOW:
+1. User provides admin credentials and secret key
+2. Frontend validates secret key format
+3. Calls registration API with admin role
+4. Backend verifies admin secret key
+5. Creates admin user if valid
+6. Returns authentication token
+7. Redirects to /admin/dashboard
+
+
+2.4 TEACHER SIGNUP PAGE (/teacher-signup)
+-----------------------------------------
+Route: /teacher-signup
+Component: frontend/src/pages/Teacherpanel/TeacherSignUp.jsx
+
+FRONTEND FUNCTIONALITY:
+- Instructor-specific registration form
+- Additional fields: expertise, bio, qualifications
+- Portfolio/credentials upload
+- Teaching experience information
+
+BACKEND INTEGRATION:
+- API: POST /api/auth/register (with role: 'instructor')
+- Creates instructor user account
+- Status set to 'pending' for admin approval
+
+DATA FLOW:
+1. Instructor fills detailed registration form
+2. Frontend validates all required fields
+3. Calls register API with instructor role
+4. Backend creates User with role: 'instructor'
+5. Sets instructorStatus: 'pending'
+6. Returns authentication token
+7. Redirects to /instructor/profile/complete for profile setup
+
+
+================================================================================
+SECTION 3: STUDENT PANEL PAGES
+================================================================================
+
+3.1 STUDENT DASHBOARD (/student/dashboard)
+------------------------------------------
+Route: /student/dashboard
+Component: frontend/src/pages/Student/StudentDashboard.jsx
+Protected: Yes (Student role required)
+
+FRONTEND FUNCTIONALITY:
+- Overview of student's learning journey
+- Statistics: enrolled courses, completed courses, certificates earned
+- Recent activity feed
+- Continue learning section (courses in progress)
+- Upcoming quizzes/assignments
+- Achievement badges display
+- Progress charts and graphs
+
+BACKEND INTEGRATION:
+- API: GET /api/student/dashboard
+- Controller: studentController.getDashboardStats()
+- Aggregates data from multiple collections
+
+DATA FLOW:
+1. Component mounts → calls getDashboardStats()
+2. Backend queries:
+   - Enrollment collection for student's enrollments
+   - QuizResult collection for quiz scores
+   - Badge collection for earned badges
+   - Certificate collection for certificates
+3. Calculates statistics:
+   - Total enrolled courses
+   - Average progress percentage
+   - Completed courses count
+   - Certificates earned
+4. Returns aggregated dashboard data
+5. Frontend displays statistics in cards and charts
+
+
+3.2 STUDENT COURSES (/student/courses)
+--------------------------------------
+Route: /student/courses
+Component: frontend/src/pages/Student/StudentCourses.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Browse all available courses
+- Filter by category, level, price
+- Search courses by title
+- View course cards with details
+- Add to cart functionality
+- Quick enroll option
+
+BACKEND INTEGRATION:
+- API: GET /api/student/courses
+- Controller: studentController.getAllCourses()
+- Returns all published courses
+
+DATA FLOW:
+1. Component loads → fetches all courses
+2. Backend queries Course model with status: 'published'
+3. Populates instructor information
+4. Returns course array
+5. Frontend displays in grid with filters
+6. User can enroll or add to cart
+
+
+3.3 ENROLLED COURSES (/student/enrolled)
+----------------------------------------
+Route: /student/enrolled
+Component: frontend/src/pages/Student/EnrolledCourses.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Displays all courses student is enrolled in
+- Shows progress percentage for each course
+- Quick access to course player
+- Filter by: in-progress, completed
+- Sort by: recently accessed, progress
+- Course completion status indicators
+
+BACKEND INTEGRATION:
+- API: GET /api/student/enrollments
+- Controller: studentController.getEnrolledCourses()
+- Returns enrollments with populated course data
+
+DATA FLOW:
+1. Component calls getEnrolledCourses()
+2. Backend finds all Enrollment documents for student
+3. Populates course reference with full course data
+4. Calculates progress for each enrollment:
+   - Counts completed lectures
+   - Counts total lectures
+   - Progress = (completed / total) * 100
+5. Returns array of enrollments with course data
+6. Frontend displays courses with progress bars
+7. "Continue Learning" button links to course player
+
+
+3.4 COURSE PLAYER (/student/course-player/:courseId)
+----------------------------------------------------
+Route: /student/course-player/:courseId
+Component: frontend/src/pages/Student/CoursePlayer.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Video player for lecture content
+- Sidebar with course curriculum
+- Navigation between lectures
+- Mark lecture as complete checkbox
+- Notes section for each lecture
+- Resources download section
+- Next/Previous lecture buttons
+- Progress tracking
+
+BACKEND INTEGRATION:
+- API: GET /api/student/courses/:id
+- API: PUT /api/student/enrollments/:id/progress
+- Controller: studentController.getCourseDetails()
+- Controller: studentController.updateProgress()
+
+DATA FLOW:
+1. Component loads course by ID
+2. Backend returns complete course structure
+3. Fetches student's enrollment for this course
+4. Displays current lecture video
+5. When student completes lecture:
+   - Checkbox triggers updateProgress()
+   - Backend updates Enrollment.completedLectures array
+   - Recalculates overall progress percentage
+   - Returns updated enrollment
+6. Frontend updates progress bar
+7. Unlocks next lecture if sequential
+
+
+3.5 COURSE PLAYER TABS
+----------------------
+
+3.5.1 Overview Tab (/student/course/:courseId/overview)
+Component: frontend/src/pages/Student/CoursePlayer/CourseOverview.jsx
+
+FUNCTIONALITY:
+- Course description and objectives
+- Instructor information
+- Course statistics
+- Requirements and prerequisites
+
+3.5.2 Lectures Tab (/student/course/:courseId/lectures)
+Component: frontend/src/pages/Student/CoursePlayer/CourseLectures.jsx
+
+FUNCTIONALITY:
+- Complete curriculum listing
+- Section-wise lecture organization
+- Lecture completion status
+- Click to play lecture
+- Download resources
+
+3.5.3 Quizzes Tab (/student/course/:courseId/quizzes)
+Component: frontend/src/pages/Student/CoursePlayer/CourseQuizzes.jsx
+
+FUNCTIONALITY:
+- Lists all quizzes in course
+- Shows quiz status: not attempted, passed, failed
+- Score display for completed quizzes
+- Retake option for failed quizzes
+- Link to take quiz
+
+BACKEND INTEGRATION:
+- API: GET /api/student/quizzes/course/:courseId
+- API: GET /api/student/quiz-results/:courseId
+- Returns quizzes and student's results
+
+3.5.4 Badges Tab (/student/course/:courseId/badges)
+Component: frontend/src/pages/Student/CoursePlayer/CourseBadges.jsx
+
+FUNCTIONALITY:
+- Displays badges earned in this course
+- Badge criteria and requirements
+- Achievement date
+- Badge icons and descriptions
+
+BACKEND INTEGRATION:
+- API: GET /api/student/badges/:courseId
+- Returns badges earned by student for this course
+
+3.5.5 Community Tab (/student/course/:courseId/community)
+Component: frontend/src/pages/Student/CoursePlayer/CourseCommunity.jsx
+
+FUNCTIONALITY:
+- Course-specific discussion forum
+- Post questions and answers
+- Interact with other students
+- Instructor responses
+
+BACKEND INTEGRATION:
+- API: GET /api/chat/course/:courseId
+- API: POST /api/chat/message
+- Real-time chat using Socket.io
+
+3.5.6 Certificate Tab (/student/course/:courseId/certificate)
+Component: frontend/src/pages/Student/CoursePlayer/CourseCertificate.jsx
+
+FUNCTIONALITY:
+- Shows certificate eligibility status
+- Displays requirements: complete all lectures, pass all quizzes
+- Request certificate button
+- Download certificate if approved
+
+BACKEND INTEGRATION:
+- API: GET /api/student/courses/:courseId/certificate-eligibility
+- API: POST /api/student/certificates/request
+- Checks if student meets all requirements
+
+
+3.6 TAKE QUIZ PAGE (/student/quiz/:courseId/:sectionIndex/:lectureIndex)
+------------------------------------------------------------------------
+Route: /student/quiz/:courseId/:sectionIndex/:lectureIndex
+Component: frontend/src/pages/Student/TakeQuiz.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Displays quiz questions one by one
+- Multiple choice, true/false question types
+- Timer for timed quizzes
+- Submit quiz button
+- Review answers option
+- Score display after submission
+
+BACKEND INTEGRATION:
+- API: GET /api/student/quizzes/course/:courseId/section/:sectionIndex
+- API: POST /api/student/courses/:courseId/sections/:sectionIndex/quiz/attempt
+- Controller: studentQuizController.getQuizBySection()
+- Controller: studentController.submitEmbeddedQuiz()
+
+DATA FLOW:
+1. Component loads quiz by course and section
+2. Backend finds quiz in course structure
+3. Returns quiz questions (without correct answers)
+4. Student answers all questions
+5. Submits quiz with answers array
+6. Backend calculates score:
+   - Compares student answers with correct answers
+   - Calculates percentage
+   - Determines pass/fail (passing score: 70%)
+7. Creates QuizResult document
+8. If passed, may award badge
+9. Updates enrollment progress
+10. Returns score and result to frontend
+11. Frontend displays score and feedback
+
+
+3.7 SUBMIT ASSIGNMENT PAGE (/student/assignment/:courseId/:sectionIndex/:lectureIndex)
+--------------------------------------------------------------------------------------
+Route: /student/assignment/:courseId/:sectionIndex/:lectureIndex
+Component: frontend/src/pages/Student/SubmitAssignment.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Displays assignment instructions
+- File upload interface
+- Text submission area
+- Submission deadline display
+- Previous submission view (if exists)
+- Grade display (if graded)
+
+BACKEND INTEGRATION:
+- API: POST /api/student/assignments/:id/submit
+- Controller: studentController.submitAssignment()
+- Handles file uploads using multer
+
+DATA FLOW:
+1. Component loads assignment details
+2. Student uploads file or enters text
+3. Submits assignment
+4. Backend receives file/text
+5. Stores file in uploads directory
+6. Creates AssignmentSubmission document:
+   - Links to student, assignment, course
+   - Stores file path or text content
+   - Sets status: 'submitted'
+7. Returns submission confirmation
+8. Frontend shows success message
+9. Instructor can later grade the submission
+
+
+3.8 STUDENT PROGRESS (/student/progress)
+----------------------------------------
+Route: /student/progress
+Component: frontend/src/pages/Student/StudentProgress.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Overall learning progress visualization
+- Course-wise progress breakdown
+- Time spent on platform
+- Learning streak calendar
+- Quiz performance analytics
+- Completion rate charts
+
+BACKEND INTEGRATION:
+- API: GET /api/student/dashboard
+- Aggregates progress data from enrollments
+- Calculates statistics and trends
+
+DATA FLOW:
+1. Fetches all student enrollments
+2. Backend calculates:
+   - Overall progress across all courses
+   - Individual course progress
+   - Quiz scores and averages
+   - Completion dates
+3. Returns progress analytics
+4. Frontend renders charts and graphs
+
+
+3.9 STUDENT BADGES (/student/badges)
+------------------------------------
+Route: /student/badges
+Component: frontend/src/pages/Student/StudentBadges.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Displays all badges earned by student
+- Organized by course
+- Badge details: name, description, date earned
+- Shows "No achievements yet" if no badges
+- Filter by course
+
+BACKEND INTEGRATION:
+- API: GET /api/student/badges
+- Controller: studentController.getBadges()
+- Returns all badges earned by student
+
+DATA FLOW:
+1. Component calls getBadges()
+2. Backend queries Badge collection:
+   - Finds badges where studentId matches
+   - Populates course information
+3. Groups badges by course
+4. Returns badge array
+5. Frontend displays badges organized by course
+6. Shows badge icons and achievement dates
+
+
+3.10 STUDENT CERTIFICATES (/student/certificates)
+-------------------------------------------------
+Route: /student/certificates
+Component: frontend/src/pages/Student/StudentCertificates.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Lists all certificates earned
+- Certificate status: pending, approved, rejected
+- Download certificate button (if approved)
+- Certificate preview
+- Request new certificate option
+
+BACKEND INTEGRATION:
+- API: GET /api/student/certificates
+- Controller: studentController.getCertificates()
+- Returns student's certificates
+
+DATA FLOW:
+1. Component calls getCertificates()
+2. Backend queries Certificate collection:
+   - Finds certificates for student
+   - Populates course data
+3. Returns certificate array with status
+4. Frontend displays certificates
+5. Approved certificates show download button
+6. Pending certificates show waiting status
+
+
+3.11 CERTIFICATE REQUEST (/student/certificate-request)
+-------------------------------------------------------
+Route: /student/certificate-request
+Component: frontend/src/pages/Student/CertificateRequest.jsx
+Protected: Yes (Student role)
+
+FRONTEND FUNCTIONALITY:
+- Form to request course certificate
+- Select course from completed courses
+- Verify eligibility before request
+- Shows requirements checklist
+- Submit request button
+
+BACKEND INTEGRATION:
+- API: POST /api/student/certificates/request
+- Controller: studentController.requestCertificate()
+- Validates eligibility before creating request
+
+DATA FLOW:
+1. Student selects course for certificate
+2. Frontend checks eligibility:
+   - All lectures completed
+   - All quizzes passed
+3. Submits certificate request
+4. Backend verifies eligibility:
+   - Checks enrollment progress = 100%
+   - Checks all quiz results are passing
+5. Creates Certificate document:
+   - Status: 'pending'
+   - Links student, course, enrollment
+6. Returns success message
+7. Admin/Instructor can approve later
+
+
+================================================================================
+SECTION 4: INSTRUCTOR PANEL PAGES
+================================================================================
+
+4.1 INSTRUCTOR DASHBOARD (/instructor/dashboard)
+------------------------------------------------
+Route: /instructor/dashboard
+Component: frontend/src/pages/Instructor/InstructorDashboard.jsx
+Protected: Yes (Instructor role, approved status)
+
+FRONTEND FUNCTIONALITY:
+- Overview of instructor's teaching statistics
+- Total students taught
+- Total courses created
+- Revenue earned
+- Recent enrollments
+- Course performance metrics
+- Quick action buttons
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/dashboard
+- Controller: instructorController.getDashboardStats()
+- Aggregates instructor-specific data
+
+DATA FLOW:
+1. Component calls getDashboardStats()
+2. Backend queries:
+   - Course collection for instructor's courses
+   - Enrollment collection for total students
+   - Revenue collection for earnings
+   - QuizResult collection for student performance
+3. Calculates:
+   - Total students across all courses
+   - Total revenue earned
+   - Average course rating
+   - Recent activity
+4. Returns dashboard statistics
+5. Frontend displays in cards and charts
+
+
+4.2 INSTRUCTOR PROFILE FORM (/instructor/profile/complete)
+----------------------------------------------------------
+Route: /instructor/profile/complete
+Component: frontend/src/pages/Instructor/InstructorProfileForm.jsx
+Protected: Yes (Instructor role)
+
+FRONTEND FUNCTIONALITY:
+- Multi-step profile completion form
+- Personal information: name, bio, photo
+- Professional details: expertise, experience
+- Education and qualifications
+- Social media links
+- Teaching philosophy
+- Submit for admin approval
+
+BACKEND INTEGRATION:
+- API: POST /api/instructor/profile/submit
+- Controller: instructorProfileController.submitProfile()
+- Creates InstructorProfile document
+
+DATA FLOW:
+1. New instructor fills profile form
+2. Frontend validates all required fields
+3. Submits profile data
+4. Backend creates InstructorProfile:
+   - Links to instructor user
+   - Stores all profile information
+   - Sets status: 'pending'
+5. Updates User.instructorStatus to 'pending'
+6. Returns success message
+7. Frontend shows "Awaiting approval" message
+8. Admin reviews and approves profile
+
+
+4.3 INSTRUCTOR PROFILE (/instructor/profile)
+--------------------------------------------
+Route: /instructor/profile
+Component: frontend/src/pages/Instructor/InstructorProfile.jsx
+Protected: Yes (Instructor role)
+
+FRONTEND FUNCTIONALITY:
+- Displays instructor's complete profile
+- Edit profile button
+- Profile statistics
+- Courses taught
+- Student reviews
+- Achievements and badges
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/profile
+- Controller: instructorProfileController.getProfile()
+- Returns instructor profile data
+
+DATA FLOW:
+1. Component calls getProfile()
+2. Backend finds InstructorProfile for user
+3. Populates related data (courses, reviews)
+4. Returns complete profile
+5. Frontend displays profile information
+6. Edit button redirects to profile form
+
+
+4.4 INSTRUCTOR COURSES (/instructor/courses)
+--------------------------------------------
+Route: /instructor/courses
+Component: frontend/src/pages/Instructor/InstructorCourses.jsx
+Protected: Yes (Instructor role, approved)
+
+FRONTEND FUNCTIONALITY:
+- Lists all courses created by instructor
+- Course status: draft, published, pending approval
+- Quick stats per course: students, revenue
+- Edit/Delete course options
+- Create new course button
+- Filter by status
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/courses
+- Controller: instructorController.getCourses()
+- Returns instructor's courses
+
+DATA FLOW:
+1. Component calls getCourses()
+2. Backend queries Course collection:
+   - Finds courses where instructorId matches
+   - Populates enrollment count
+3. Returns course array with statistics
+4. Frontend displays courses in grid/list
+5. Each course shows: title, students, status, actions
+
+
+4.5 CREATE COURSE (/instructor/courses/create)
+----------------------------------------------
+Route: /instructor/courses/create
+Component: frontend/src/pages/Instructor/CreateCourse.jsx
+Protected: Yes (Instructor role, approved)
+
+FRONTEND FUNCTIONALITY:
+- Multi-step course creation form
+- Step 1: Basic info (title, description, category, level)
+- Step 2: Pricing and thumbnail
+- Step 3: Learning outcomes and requirements
+- Step 4: Course structure (sections and lectures)
+- Preview before publish
+- Save as draft option
+
+BACKEND INTEGRATION:
+- API: POST /api/instructor/courses
+- Controller: instructorController.createCourse()
+- Creates Course document
+
+DATA FLOW:
+1. Instructor fills course creation form
+2. Frontend validates each step
+3. Submits complete course data
+4. Backend creates Course document:
+   - Links to instructor
+   - Stores all course information
+   - Sets status: 'draft' or 'pending'
+   - Initializes empty sections array
+5. Returns created course with ID
+6. Frontend redirects to course management
+7. Instructor can add content (lectures, quizzes)
+
+
+4.6 COURSE MANAGEMENT PAGES
+---------------------------
+Base Route: /instructor/courses/:courseId
+Layout: CourseManagementLayout (with sidebar navigation)
+
+4.6.1 Course Overview (/instructor/courses/:courseId/overview)
+Component: frontend/src/pages/Instructor/InstructorCourseOverview.jsx
+
+FUNCTIONALITY:
+- Course summary and statistics
+- Total students enrolled
+- Revenue generated
+- Average rating
+- Recent enrollments
+- Edit course details button
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/courses/:id/overview
+- Returns course with enrollment statistics
+
+4.6.2 Manage Lectures (/instructor/courses/:courseId/lectures)
+Component: frontend/src/pages/Instructor/CourseManagement/ManageLectures.jsx
+
+FUNCTIONALITY:
+- Add/Edit/Delete sections
+- Add/Edit/Delete lectures within sections
+- Upload video content
+- Add lecture resources (PDFs, files)
+- Reorder lectures via drag-and-drop
+- Set lecture duration
+
+BACKEND INTEGRATION:
+- API: POST /api/instructor/courses/:id/sections
+- API: POST /api/instructor/courses/:id/sections/:sectionId/lessons
+- Controller: instructorController.addSection()
+- Controller: instructorController.addLesson()
+
+DATA FLOW:
+1. Instructor adds new section
+2. Frontend calls addSection with section name
+3. Backend pushes section to course.sections array
+4. Returns updated course
+5. Instructor adds lecture to section
+6. Uploads video file (handled by multer)
+7. Backend stores file path
+8. Adds lecture to section.lectures array
+9. Returns updated course
+10. Frontend refreshes course structure
+
+4.6.3 Manage Quizzes (/instructor/courses/:courseId/quizzes)
+Component: frontend/src/pages/Instructor/CourseManagement/ManageQuizzes.jsx
+
+FUNCTIONALITY:
+- Create new quiz for specific section
+- Add multiple-choice questions
+- Set correct answers
+- Set passing score
+- Edit/Delete existing quizzes
+- Preview quiz
+
+BACKEND INTEGRATION:
+- API: POST /api/instructor/quizzes
+- API: PUT /api/instructor/quizzes/:id
+- API: DELETE /api/instructor/quizzes/:id
+- Controller: quizController.createQuiz()
+
+DATA FLOW:
+1. Instructor creates quiz
+2. Adds questions with options
+3. Marks correct answers
+4. Submits quiz data
+5. Backend creates Quiz document:
+   - Links to course and section
+   - Stores questions array
+   - Sets passing score
+6. Returns created quiz
+7. Frontend displays quiz in list
+8. Students can later attempt quiz
+
+4.6.4 Course Students & Results (/instructor/courses/:courseId/students)
+Component: frontend/src/pages/Instructor/CourseManagement/CourseStudentResults.jsx
+
+FUNCTIONALITY:
+- Lists all students enrolled in course
+- Shows student progress percentage
+- Quiz scores for each student
+- Assignment submissions
+- Grade assignments
+- Award badges to students
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/courses/:id/enrollments
+- API: GET /api/instructor/quiz-results/:courseId
+- Controller: instructorController.getCourseEnrollments()
+- Controller: instructorController.getQuizResults()
+
+DATA FLOW:
+1. Component loads course enrollments
+2. Backend finds all Enrollment documents for course
+3. Populates student information
+4. Fetches quiz results for each student
+5. Returns array of students with progress and scores
+6. Frontend displays student list with statistics
+7. Instructor can view individual student performance
+
+4.6.5 Course Badges (/instructor/courses/:courseId/badges)
+Component: frontend/src/pages/Instructor/CourseManagement/CourseBadges.jsx
+
+FUNCTIONALITY:
+- View badges awarded in course
+- Award badge to student manually
+- Set badge criteria
+- Badge templates
+
+BACKEND INTEGRATION:
+- API: POST /api/instructor/badges
+- API: GET /api/instructor/badges/:courseId
+- Controller: instructorController.awardBadge()
+
+DATA FLOW:
+1. Instructor selects student and badge type
+2. Submits badge award
+3. Backend creates Badge document:
+   - Links student, course, instructor
+   - Stores badge details
+   - Records award date
+4. Returns created badge
+5. Student can view badge in their profile
+
+4.6.6 Course Community (/instructor/courses/:courseId/community)
+Component: frontend/src/pages/Instructor/CourseManagement/CourseCommunity.jsx
+
+FUNCTIONALITY:
+- View course discussion forum
+- Respond to student questions
+- Moderate discussions
+- Pin important messages
+
+BACKEND INTEGRATION:
+- API: GET /api/chat/course/:courseId
+- API: POST /api/chat/message
+- Real-time updates via Socket.io
+
+4.6.7 Course Certificates (/instructor/courses/:courseId/certificates)
+Component: frontend/src/pages/Instructor/CourseManagement/CourseCertificates.jsx
+
+FUNCTIONALITY:
+- View certificate requests for course
+- Approve/Reject certificate requests
+- View student eligibility
+- Download approved certificates
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/courses/:id/certificates
+- API: PUT /api/instructor/certificates/:id/approve
+- Controller: instructorController.getCertificateRequests()
+- Controller: instructorController.approveCertificateRequest()
+
+DATA FLOW:
+1. Component loads certificate requests
+2. Backend finds Certificate documents for course
+3. Returns requests with student information
+4. Instructor reviews eligibility
+5. Approves or rejects request
+6. Backend updates Certificate status
+7. If approved, generates certificate PDF
+8. Student can download certificate
+
+4.6.8 Course Analytics (/instructor/courses/:courseId/analytics)
+Component: frontend/src/pages/Instructor/InstructorCourseAnalytics.jsx
+
+FUNCTIONALITY:
+- Enrollment trends over time
+- Student engagement metrics
+- Quiz performance analytics
+- Revenue tracking
+- Completion rates
+- Student demographics
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/courses/:id/analytics
+- Controller: instructorController.getCourseAnalytics()
+
+DATA FLOW:
+1. Component calls getCourseAnalytics
+2. Backend aggregates data:
+   - Enrollments by date
+   - Quiz scores distribution
+   - Lecture completion rates
+   - Revenue over time
+3. Returns analytics data
+4. Frontend renders charts and graphs
+
+
+4.7 INSTRUCTOR STUDENTS (/instructor/students)
+----------------------------------------------
+Route: /instructor/students
+Component: frontend/src/pages/Instructor/InstructorStudents.jsx
+Protected: Yes (Instructor role, approved)
+
+FRONTEND FUNCTIONALITY:
+- Lists all students across all instructor's courses
+- Student details: name, email, enrolled courses
+- Overall performance metrics
+- Filter by course
+- Search students
+
+BACKEND INTEGRATION:
+- API: GET /api/instructor/courses (with enrollments)
+- Aggregates students from all courses
+
+DATA FLOW:
+1. Fetches all instructor's courses
+2. For each course, gets enrollments
+3. Consolidates unique students
+4. Returns student list with course information
+5. Frontend displays students with their courses
+
+
+================================================================================
+SECTION 5: ADMIN PANEL PAGES
+================================================================================
+
+5.1 ADMIN DASHBOARD (/admin/dashboard)
+--------------------------------------
+Route: /admin/dashboard
+Component: frontend/src/pages/Admin/AdminDashboard.jsx
+Protected: Yes (Admin role)
+Layout: AdminLayout (with admin sidebar)
+
+FRONTEND FUNCTIONALITY:
+- Platform-wide statistics overview
+- Total users (students, instructors, admins)
+- Total courses (published, pending, draft)
+- Total revenue generated
+- Recent activity feed
+- Pending approvals count
+- Growth charts and trends
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/dashboard
+- Controller: adminController.getDashboardStats()
+- Aggregates platform-wide data
+
+DATA FLOW:
+1. Component calls getDashboardStats()
+2. Backend queries multiple collections:
+   - User collection: count by role
+   - Course collection: count by status
+   - Revenue collection: sum of all transactions
+   - Enrollment collection: total enrollments
+   - InstructorProfile: pending approvals count
+3. Calculates platform statistics
+4. Returns comprehensive dashboard data
+5. Frontend displays in cards, charts, and graphs
+
+
+5.2 ADMIN USERS (/admin/users)
+------------------------------
+Route: /admin/users
+Component: frontend/src/pages/Admin/AdminUsers.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Lists all platform users
+- Filter by role: student, instructor, admin
+- Search by name or email
+- User status: active, suspended
+- Toggle user status (activate/suspend)
+- View user details
+- User statistics
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/users
+- API: PUT /api/admin/users/:id/toggle-status
+- Controller: adminController.getAllUsers()
+- Controller: adminController.toggleUserStatus()
+
+DATA FLOW:
+1. Component loads all users
+2. Backend queries User collection
+3. Returns user array with role and status
+4. Frontend displays users in table
+5. Admin can toggle user status
+6. Backend updates User.isActive field
+7. Returns updated user
+8. Frontend refreshes user list
+
+
+5.3 ADMIN COURSES (/admin/courses)
+----------------------------------
+Route: /admin/courses
+Component: frontend/src/pages/Admin/AdminCourses.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Lists all courses on platform
+- Organized by instructor
+- Course status: published, pending, draft
+- Approve/Reject pending courses
+- Delete courses
+- View course details
+- Course statistics
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/courses/instructors
+- API: GET /api/admin/courses/instructor/:instructorId
+- API: PUT /api/admin/courses/:id/approve
+- API: PUT /api/admin/courses/:id/reject
+- API: DELETE /api/admin/courses/:courseId
+- Controller: adminController.getAllInstructorsWithCourses()
+
+DATA FLOW:
+1. Component loads instructors with courses
+2. Backend finds all instructors
+3. For each instructor, gets their courses
+4. Returns instructors array with nested courses
+5. Frontend displays courses grouped by instructor
+6. Admin can approve/reject/delete courses
+7. Approval updates Course.status to 'published'
+8. Rejection updates status to 'rejected'
+9. Delete removes course document
+
+
+5.4 ADMIN INSTRUCTORS (/admin/instructors)
+------------------------------------------
+Route: /admin/instructors
+Component: frontend/src/pages/Admin/AdminInstructors.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Lists all instructors on platform
+- Instructor statistics: courses, students, revenue
+- Filter by status: approved, pending, rejected
+- View instructor profile
+- Instructor performance metrics
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/instructors
+- Controller: adminController.getAllInstructorsWithStats()
+
+DATA FLOW:
+1. Component calls getAllInstructorsWithStats()
+2. Backend finds all users with role: 'instructor'
+3. For each instructor, aggregates:
+   - Total courses created
+   - Total students taught
+   - Total revenue generated
+   - Average course rating
+4. Returns instructor array with statistics
+5. Frontend displays instructors with metrics
+
+
+5.5 INSTRUCTOR APPROVALS (/admin/instructor-approvals)
+------------------------------------------------------
+Route: /admin/instructor-approvals
+Component: frontend/src/pages/Admin/InstructorApprovals.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Lists pending instructor profile approvals
+- View instructor profile details
+- Review credentials and qualifications
+- Approve or reject instructor
+- Rejection reason input
+- Approved instructors notification
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/instructors/pending
+- API: PUT /api/admin/instructors/:id/approve
+- API: PUT /api/admin/instructors/:id/reject
+- Controller: adminController.getPendingInstructors()
+- Controller: adminController.approveInstructor()
+- Controller: adminController.rejectInstructor()
+
+DATA FLOW:
+1. Component loads pending instructors
+2. Backend finds InstructorProfile with status: 'pending'
+3. Populates user information
+4. Returns pending profiles array
+5. Admin reviews each profile
+6. Approves instructor:
+   - Backend updates User.instructorStatus to 'approved'
+   - Updates InstructorProfile.status to 'approved'
+   - Returns success
+7. Rejects instructor:
+   - Updates status to 'rejected'
+   - Stores rejection reason
+8. Frontend refreshes pending list
+
+
+5.6 ADMIN REVENUE (/admin/revenue)
+----------------------------------
+Route: /admin/revenue
+Component: frontend/src/pages/Admin/AdminRevenue.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Total revenue statistics
+- Revenue by course
+- Revenue by instructor
+- Revenue trends over time
+- Transaction history
+- Filter by date range
+- Export revenue reports
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/revenue
+- API: GET /api/admin/revenue/transactions
+- Controller: adminController.getRevenueStats()
+- Controller: adminController.getRevenueTransactions()
+
+DATA FLOW:
+1. Component calls getRevenueStats()
+2. Backend queries Revenue collection
+3. Aggregates revenue data:
+   - Total revenue
+   - Revenue by course
+   - Revenue by instructor
+   - Revenue by date
+4. Returns revenue statistics
+5. Component calls getRevenueTransactions()
+6. Backend returns all transactions with details
+7. Frontend displays revenue charts and tables
+
+
+5.7 ADMIN ANALYTICS (/admin/analytics)
+--------------------------------------
+Route: /admin/analytics
+Component: frontend/src/pages/Admin/Analytics.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Platform growth metrics
+- User acquisition trends
+- Course enrollment trends
+- Revenue growth charts
+- Popular courses ranking
+- Popular instructors ranking
+- Student engagement metrics
+- Completion rates
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/analytics
+- Controller: adminController.getAnalytics()
+
+DATA FLOW:
+1. Component calls getAnalytics()
+2. Backend performs complex aggregations:
+   - User growth over time
+   - Enrollment trends
+   - Revenue trends
+   - Course popularity
+   - Instructor rankings
+3. Returns comprehensive analytics data
+4. Frontend renders multiple charts and graphs
+
+
+5.8 ADMIN CERTIFICATES (/admin/certificates)
+--------------------------------------------
+Route: /admin/certificates
+Component: frontend/src/pages/Admin/AdminCertificates.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Lists pending certificate requests
+- View student eligibility
+- Generate certificate
+- Certificate templates management
+- Approved certificates list
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/certificates/pending
+- API: POST /api/admin/certificates/:id/generate
+- Controller: adminController.getPendingCertificates()
+- Controller: adminController.generateCertificate()
+
+DATA FLOW:
+1. Component loads pending certificates
+2. Backend finds Certificate with status: 'pending'
+3. Returns certificate requests with student/course data
+4. Admin reviews eligibility
+5. Generates certificate:
+   - Backend creates PDF certificate
+   - Updates Certificate.status to 'approved'
+   - Stores certificate file path
+6. Returns success
+7. Student can download certificate
+
+
+5.9 ADMIN SETTINGS (/admin/settings)
+------------------------------------
+Route: /admin/settings
+Component: frontend/src/pages/Admin/AdminSettings.jsx
+Protected: Yes (Admin role)
+
+FRONTEND FUNCTIONALITY:
+- Platform configuration settings
+- Site name and logo
+- Email settings
+- Payment gateway configuration
+- Course approval settings (auto/manual)
+- Certificate settings
+- Notification preferences
+- Security settings
+
+BACKEND INTEGRATION:
+- API: GET /api/admin/settings
+- API: PUT /api/admin/settings
+- Controller: adminController.getSettings()
+- Controller: adminController.updateSettings()
+
+DATA FLOW:
+1. Component loads current settings
+2. Backend finds Setting document
+3. Returns platform settings
+4. Admin modifies settings
+5. Submits updated settings
+6. Backend updates Setting document
+7. Returns success
+8. Settings applied platform-wide
+
+
+================================================================================
+SECTION 6: SHARED FEATURES
+================================================================================
+
+6.1 COMMUNITY CHAT (/community)
+-------------------------------
+Route: /community
+Component: frontend/src/pages/CommunityChat.jsx
+Protected: Yes (All authenticated users)
+
+FRONTEND FUNCTIONALITY:
+- Global platform chat room
+- Real-time messaging
+- User presence indicators
+- Message history
+- Emoji support
+- File sharing
+
+BACKEND INTEGRATION:
+- API: GET /api/chat/messages
+- API: POST /api/chat/message
+- WebSocket: Socket.io for real-time communication
+- Controller: chatController
+
+DATA FLOW:
+1. Component connects to Socket.io server
+2. Loads recent chat messages
+3. Backend returns ChatMessage documents
+4. Frontend displays messages
+5. User sends message:
+   - Emits socket event with message
+   - Backend receives via Socket.io
+   - Creates ChatMessage document
+   - Broadcasts to all connected clients
+6. All users receive message in real-time
+7. Frontend appends message to chat
+
+
+6.2 AUTHENTICATION FLOW
+-----------------------
+
+LOGIN PROCESS:
+1. User enters credentials
+2. Frontend validates input
+3. POST /api/auth/login with email and password
+4. Backend finds user by email
+5. Compares password hash
+6. Generates JWT token with payload: { id, role }
+7. Returns { token, user: { id, name, email, role } }
+8. Frontend stores token in sessionStorage
+9. Stores user in Redux store
+10. Redirects based on role
+
+LOGOUT PROCESS:
+1. User clicks logout
+2. Frontend clears sessionStorage
+3. Clears Redux store
+4. Redirects to /login
+
+PROTECTED ROUTES:
+1. User accesses protected route
+2. ProtectedRoute component checks authentication
+3. Reads token from sessionStorage
+4. If no token, redirects to /login
+5. If token exists, checks user role
+6. If role matches allowedRoles, renders component
+7. If role doesn't match, redirects to appropriate dashboard
+
+TOKEN VERIFICATION:
+1. Every API request includes Authorization header
+2. Backend middleware (protect) extracts token
+3. Verifies token using JWT secret
+4. Decodes token to get user ID
+5. Finds user in database
+6. Attaches user to req.user
+7. Proceeds to controller
+
+
+6.3 ENROLLMENT PROCESS
+----------------------
+
+STUDENT ENROLLMENT:
+1. Student views course detail page
+2. Clicks "Enroll Now" button
+3. If not logged in, redirects to /login
+4. If logged in, calls enrollInCourse(courseId)
+5. Backend checks:
+   - User is authenticated
+   - User is student
+   - Course exists and is published
+   - Student not already enrolled
+6. Creates Enrollment document:
+   - studentId, courseId
+   - enrolledAt: current date
+   - progress: 0
+   - completedLectures: []
+   - status: 'active'
+7. Creates Revenue document:
+   - courseId, instructorId, studentId
+   - amount: course price
+   - date: current date
+8. Returns enrollment success
+9. Frontend redirects to /student/enrolled
+10. Student can access course player
+
+
+6.4 PROGRESS TRACKING
+---------------------
+
+LECTURE COMPLETION:
+1. Student watches lecture in course player
+2. Clicks "Mark as Complete" checkbox
+3. Frontend calls updateProgress(enrollmentId, lectureId)
+4. Backend finds Enrollment
+5. Adds lectureId to completedLectures array
+6. Calculates new progress:
+   - totalLectures = count all lectures in course
+   - completedCount = completedLectures.length
+   - progress = (completedCount / totalLectures) * 100
+7. Updates Enrollment.progress
+8. Returns updated enrollment
+9. Frontend updates progress bar
+
+QUIZ COMPLETION:
+1. Student completes quiz
+2. Backend calculates score
+3. Creates QuizResult document
+4. If passed, may award badge
+5. Updates enrollment progress
+6. Returns result
+
+
+6.5 CERTIFICATE WORKFLOW
+------------------------
+
+ELIGIBILITY CHECK:
+1. Student requests certificate
+2. Backend verifies:
+   - Enrollment.progress === 100
+   - All quizzes passed (QuizResult.passed === true)
+   - Course has certification enabled
+3. Returns eligibility status
+
+CERTIFICATE REQUEST:
+1. Student submits certificate request
+2. Backend creates Certificate document:
+   - studentId, courseId, enrollmentId
+   - status: 'pending'
+   - requestedAt: current date
+3. Notifies instructor/admin
+
+CERTIFICATE APPROVAL:
+1. Instructor/Admin reviews request
+2. Verifies eligibility
+3. Approves request
+4. Backend generates PDF certificate
+5. Updates Certificate.status to 'approved'
+6. Stores certificate file path
+7. Student can download
+
+CERTIFICATE DOWNLOAD:
+1. Student clicks download
+2. Frontend requests certificate file
+3. Backend serves PDF file
+4. Browser downloads certificate
+
+
+6.6 BADGE SYSTEM
+----------------
+
+AUTOMATIC BADGE AWARD:
+1. Student passes quiz with high score (e.g., 90%+)
+2. Backend checks quiz score
+3. If score >= 90%, creates Badge:
+   - studentId, courseId, instructorId
+   - badgeType: 'Quiz Master'
+   - description: 'Scored 90%+ on quiz'
+   - awardedAt: current date
+4. Returns badge
+5. Student sees badge in profile
+
+MANUAL BADGE AWARD:
+1. Instructor selects student
+2. Chooses badge type
+3. Submits badge award
+4. Backend creates Badge document
+5. Student notified
+
+
+6.7 ASSIGNMENT GRADING
+----------------------
+
+SUBMISSION:
+1. Student uploads assignment file
+2. Backend stores file
+3. Creates AssignmentSubmission:
+   - studentId, assignmentId, courseId
+   - filePath or textContent
+   - status: 'submitted'
+   - submittedAt: current date
+
+GRADING:
+1. Instructor views submissions
+2. Downloads student's file
+3. Reviews work
+4. Assigns grade and feedback
+5. Backend updates AssignmentSubmission:
+   - grade: number
+   - feedback: text
+   - status: 'graded'
+   - gradedAt: current date
+6. Student can view grade
+
+
+================================================================================
+DATABASE MODELS SUMMARY
+================================================================================
+
+1. USER MODEL
+   - Fields: name, email, password, role, instructorStatus, isActive
+   - Roles: student, instructor, admin
+   - InstructorStatus: pending, approved, rejected
+
+2. COURSE MODEL
+   - Fields: title, description, instructorId, category, level, price, 
+             thumbnail, status, sections[], learningOutcomes[], requirements[]
+   - Status: draft, pending, published, rejected
+   - Sections: array of { name, lectures[] }
+   - Lectures: { title, videoUrl, duration, resources[] }
+
+3. ENROLLMENT MODEL
+   - Fields: studentId, courseId, enrolledAt, progress, completedLectures[], 
+             status
+   - Tracks student's course progress
+
+4. QUIZ MODEL
+   - Fields: courseId, sectionIndex, title, questions[], passingScore
+   - Questions: { question, options[], correctAnswer }
+
+5. QUIZ RESULT MODEL
+   - Fields: studentId, courseId, quizId, score, passed, answers[], 
+             attemptedAt
+
+6. BADGE MODEL
+   - Fields: studentId, courseId, instructorId, badgeType, description, 
+             awardedAt
+
+7. CERTIFICATE MODEL
+   - Fields: studentId, courseId, enrollmentId, status, requestedAt, 
+             approvedAt, certificateUrl
+   - Status: pending, approved, rejected
+
+8. REVENUE MODEL
+   - Fields: courseId, instructorId, studentId, amount, date, transactionId
+
+9. INSTRUCTOR PROFILE MODEL
+   - Fields: userId, bio, expertise, experience, qualifications, socialLinks, 
+             status
+   - Status: pending, approved, rejected
+
+10. ASSIGNMENT MODEL
+    - Fields: courseId, sectionIndex, title, description, dueDate
+
+11. ASSIGNMENT SUBMISSION MODEL
+    - Fields: studentId, assignmentId, courseId, filePath, textContent, 
+              grade, feedback, status
+    - Status: submitted, graded
+
+12. CHAT MESSAGE MODEL
+    - Fields: senderId, message, timestamp, courseId (optional)
+
+13. NOTIFICATION MODEL
+    - Fields: userId, message, type, read, createdAt
+
+14. SETTING MODEL
+    - Fields: siteName, logo, emailSettings, paymentGateway, 
+              courseApprovalMode
+
+
+================================================================================
+API ENDPOINTS SUMMARY
+================================================================================
+
+AUTHENTICATION ROUTES (/api/auth)
+- POST /register - Register new user
+- POST /login - User login
+
+STUDENT ROUTES (/api/student)
+- GET /courses - Get all courses
+- GET /courses/:id - Get course details
+- GET /dashboard - Get dashboard stats
+- POST /courses/:id/enroll - Enroll in course
+- GET /enrollments - Get enrolled courses
+- PUT /enrollments/:id/progress - Update progress
+- POST /quizzes/:id/attempt - Take quiz
+- POST /quiz-results - Submit quiz result
+- GET /quiz-results/:courseId - Get quiz results
+- GET /badges - Get all badges
+- GET /badges/:courseId - Get course badges
+- GET /certificates - Get certificates
+- POST /certificates/request - Request certificate
+- GET /courses/:courseId/certificate-eligibility - Check eligibility
+
+INSTRUCTOR ROUTES (/api/instructor)
+- POST /profile/submit - Submit instructor profile
+- GET /profile - Get instructor profile
+- GET /dashboard - Get dashboard stats
+- GET /courses - Get instructor courses
+- POST /courses - Create new course
+- PUT /courses/:id - Update course
+- GET /courses/:id/enrollments - Get course enrollments
+- GET /courses/:id/overview - Get course overview
+- GET /courses/:id/analytics - Get course analytics
+- POST /courses/:id/sections - Add section
+- POST /courses/:id/sections/:sectionId/lessons - Add lesson
+- POST /quizzes - Create quiz
+- PUT /quizzes/:id - Update quiz
+- DELETE /quizzes/:id - Delete quiz
+- POST /badges - Award badge
+- GET /courses/:id/certificates - Get certificate requests
+- PUT /certificates/:id/approve - Approve certificate
+
+ADMIN ROUTES (/api/admin)
+- GET /dashboard - Get dashboard stats
+- GET /instructors - Get all instructors
+- GET /instructors/pending - Get pending instructors
+- PUT /instructors/:id/approve - Approve instructor
+- PUT /instructors/:id/reject - Reject instructor
+- GET /courses/instructors - Get instructors with courses
+- DELETE /courses/:courseId - Delete course
+- PUT /courses/:id/approve - Approve course
+- PUT /courses/:id/reject - Reject course
+- GET /revenue - Get revenue stats
+- GET /revenue/transactions - Get transactions
+- GET /users - Get all users
+- PUT /users/:id/toggle-status - Toggle user status
+- GET /certificates/pending - Get pending certificates
+- POST /certificates/:id/generate - Generate certificate
+- GET /analytics - Get platform analytics
+- GET /settings - Get settings
+- PUT /settings - Update settings
+
+CHAT ROUTES (/api/chat)
+- GET /messages - Get chat messages
+- POST /message - Send message
+
+
+================================================================================
+KEY FEATURES IMPLEMENTATION
+================================================================================
+
+1. ROLE-BASED ACCESS CONTROL
+   - Middleware checks user role before allowing access
+   - Protected routes require authentication
+   - Role-specific routes: student, instructor, admin
+
+2. COURSE MANAGEMENT
+   - Instructors create courses with sections and lectures
+   - Admin approval workflow for courses
+   - Course status: draft, pending, published
+
+3. ENROLLMENT & PROGRESS TRACKING
+   - Students enroll in courses
+   - Progress calculated based on completed lectures
+   - Real-time progress updates
+
+4. QUIZ SYSTEM
+   - Instructors create quizzes for course sections
+   - Students attempt quizzes
+   - Automatic scoring and pass/fail determination
+   - Quiz results stored for analytics
+
+5. BADGE & CERTIFICATE SYSTEM
+   - Automatic badge awards for achievements
+   - Manual badge awards by instructors
+   - Certificate eligibility based on completion
+   - Certificate approval workflow
+
+6. REVENUE TRACKING
+   - Revenue recorded for each enrollment
+   - Instructor earnings tracking
+   - Platform-wide revenue analytics
+
+7. REAL-TIME COMMUNICATION
+   - Socket.io for chat functionality
+   - Real-time message delivery
+   - Course-specific and global chat
+
+8. INSTRUCTOR APPROVAL WORKFLOW
+   - Instructors submit profile for approval
+   - Admin reviews and approves/rejects
+   - Only approved instructors can create courses
+
+9. ANALYTICS & REPORTING
+   - Dashboard statistics for all roles
+   - Course analytics for instructors
+   - Platform analytics for admins
+   - Revenue reports and trends
+
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
+
+This documentation provides a comprehensive overview of how each page in the
+Skillify E-Learning Platform functions, including frontend components, backend
+APIs, data flow, and database interactions. Use this as a reference for
+understanding the complete system architecture and functionality.

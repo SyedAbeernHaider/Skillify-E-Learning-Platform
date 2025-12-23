@@ -903,6 +903,15 @@ exports.submitEmbeddedQuiz = async (req, res, next) => {
             }
         }
 
+        // Determine if this is the last quiz
+        let lastQuizSectionIndex = -1;
+        course.sections.forEach((section, index) => {
+            if (section.quiz && section.quiz.questions && section.quiz.questions.length > 0) {
+                lastQuizSectionIndex = index;
+            }
+        });
+        const isLastQuiz = parseInt(sectionIndex) === lastQuizSectionIndex;
+
         res.status(200).json({
             success: true,
             passed,
@@ -910,6 +919,7 @@ exports.submitEmbeddedQuiz = async (req, res, next) => {
             totalQuestions,
             correctAnswers: correctCount,
             percentage,
+            isLastQuiz, // Include this flag in the response
             answers: resultsDetails // Return breakdown to frontend
         });
 

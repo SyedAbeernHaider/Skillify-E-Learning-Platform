@@ -134,7 +134,7 @@ class NotificationService {
         try {
             const notifications = await Notification.find({ recipient: userId })
                 .sort({ createdAt: -1 })
-                .limit(limit)
+                .limit(limit) 
                 .populate('sender', 'firstName lastName profileImage'); 
 
             return notifications;

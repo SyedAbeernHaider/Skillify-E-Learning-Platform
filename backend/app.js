@@ -257,4 +257,4 @@ server.listen(PORT, () => {
   console.log(`📚 Skillify E-Learning Platform API`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`💬 Socket.IO enabled for real-time chat`);
-});
+});  

@@ -45,9 +45,13 @@ function CourseQuizzes() {
             const results = response.data.data || [];
 
             // Create a map of sectionIndex to result
+            // The API returns results sorted by submittedAt desc (newest first)
+            // We want to keep the NEWEST result for each section
             const resultsMap = {};
             results.forEach(result => {
-                resultsMap[result.sectionIndex] = result;
+                if (!resultsMap[result.sectionIndex]) {
+                    resultsMap[result.sectionIndex] = result;
+                }
             });
             setQuizResults(resultsMap);
         } catch (error) {
@@ -87,6 +91,14 @@ function CourseQuizzes() {
         }
     };
 
+    const handleRetry = () => {
+        setSubmitted(false);
+        setScore(null);
+        setAnswers({});
+        // Scroll to top of quiz area
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleAnswerChange = (questionIndex, optionIndex) => {
         setAnswers(prev => ({
             ...prev,
@@ -116,7 +128,7 @@ function CourseQuizzes() {
                 }
             });
 
-            const percentage = (earnedPoints / totalPoints) * 100;
+            const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
             const passed = percentage >= (selectedQuiz.passingScore || 70);
 
             // Submit to backend
@@ -172,6 +184,17 @@ function CourseQuizzes() {
     }
 
     const sectionsWithQuizzes = course?.sections?.filter(section => section.quiz) || [];
+
+    // Determine if selected section is the last one with a quiz
+    let lastQuizSectionIndex = -1;
+    if (course?.sections) {
+        course.sections.forEach((section, index) => {
+            if (section.quiz && section.quiz.questions && section.quiz.questions.length > 0) {
+                lastQuizSectionIndex = index;
+            }
+        });
+    }
+    const isLastQuiz = selectedSection === lastQuizSectionIndex;
 
     return (
         <CoursePlayerLayout>
@@ -283,7 +306,7 @@ function CourseQuizzes() {
                                                 <h3>Quiz Results</h3>
                                                 <div className="score-display">
                                                     <div className={`score-circle ${score.passed ? 'passed' : 'failed'}`}>
-                                                        <span className="score-percentage">{score.percentage}%</span>
+                                                        <span className="score-percentage">{Number(score.percentage).toFixed(0)}%</span>
                                                     </div>
                                                     <div className="score-details">
                                                         <p>Correct Answers: {score.correct} / {score.total}</p>
@@ -328,7 +351,38 @@ function CourseQuizzes() {
                                                 </div>
 
                                                 <div className="quiz-completed-message">
-                                                    <p>✅ Quiz completed. You can only take each quiz once.</p>
+                                                    {/* Failed + Last Quiz = Retry Button */}
+                                                    {!score.passed && isLastQuiz && (
+                                                        <div className="retry-section">
+                                                            <div className="message-box warning">
+                                                                <p>📚 <strong>Final Quiz:</strong> You didn't pass, but you can retry until you succeed!</p>
+                                                            </div>
+                                                            <button onClick={handleRetry} className="retry-btn">
+                                                                Try Again
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Failed + NOT Last Quiz */}
+                                                    {!score.passed && !isLastQuiz && (
+                                                        <div className="message-box warning">
+                                                            <p>⚠️ You didn't pass, but you should continue with the course. Good luck on the next one!</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Passed + Last Quiz */}
+                                                    {score.passed && isLastQuiz && (
+                                                        <div className="message-box success">
+                                                            <p>🎓 <strong>Congratulations!</strong> You've completed all quizzes. Don't forget to request your certificate.</p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Passed + NOT Last Quiz */}
+                                                    {score.passed && !isLastQuiz && (
+                                                        <div className="message-box success">
+                                                            <p>✅ Quiz completed! Keep up the great work.</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </>
@@ -762,6 +816,63 @@ function CourseQuizzes() {
                     .empty-state {
                         text-align: center;
                         padding: 4rem 2rem;
+                    }
+
+                    /* New Styles for Retry Logic */
+                    .retry-section {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                        align-items: center;
+                    }
+
+                    .message-box {
+                        padding: 1rem;
+                        border-radius: 8px;
+                        width: 100%;
+                        border-left: 4px solid;
+                    }
+
+                    .message-box p {
+                        margin: 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    }
+
+                    .message-box.success {
+                        background: #d1fae5;
+                        border-color: #10b981;
+                        color: #065f46;
+                    }
+
+                    .message-box.warning {
+                        background: #fff7ed;
+                        border-color: #f97316;
+                        color: #9a3412;
+                    }
+
+                    .retry-btn {
+                        width: auto;
+                        min-width: 200px;
+                        padding: 1rem 2rem;
+                        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-size: 1.125rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        transition: transform 0.2s, box-shadow 0.2s;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.4);
+                    }
+
+                    .retry-btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
                     }
 
                     @media (max-width: 1024px) {
